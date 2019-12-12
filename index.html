@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Gerador de Tabela Verdade</title>
+    <script src="lib/require.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+<body>
+
+    <div>
+        <textarea id="input"></textarea>
+    </div>
+    <div>
+        <button onclick="calcular()">Calcular</button>
+        <button onclick="limpar()">Limpar</button>
+    </div>
+
+    <ul id="tabela"></ul>
+
+    <script type="text/javascript">
+
+        function limpar() {
+            $('#input').val('');
+            $('#tabela').empty();
+        }
+        function calcular() {
+            var input = $('#input').val();
+            if (input.length == '') {
+                alert('Por favor, forneça expressões como entrada');
+                return;
+            }
+
+            $('#resultado').empty();
+
+            var antlr4 = require('antlr4/index');
+            var TrabLexer = require('parser/TrabLexer').TrabLexer;
+            var TrabParser = require('parser/TrabParser').TrabParser;
+            var HtmlTrabListener = require('./parser/HtmlTrabListener').HtmlTrabListener;
+            var HtmlErrorListener = require('./parser/HtmlErrorListener').HtmlErrorListener;
+
+            var chars = new antlr4.InputStream(input);
+            var lexer = new TrabLexer(chars);
+            var tokens = new antlr4.CommonTokenStream(lexer);
+            var parser = new TrabParser(tokens);
+
+            parser.buildParseTrees = true;
+            var tree = parser.prog();
+            var htmlTrab = new HtmlTrabListener();
+            antlr4.tree.ParseTreeWalker.DEFAULT.walk(htmlTrab, tree);
+
+            var item = htmlTrab.values[0].value;
+            $('#tabela').append('<li>' + item + '</li>');
+
+        }
+
+    </script>
+
+</body>
+
+</html>
