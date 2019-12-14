@@ -19,19 +19,23 @@
         <button onclick="calcular()">Calcular</button>
         <button onclick="limpar()">Limpar</button>
     </div>
-
-    <ul id="tabela"></ul>
+    <br><br>
+    <table border>
+        <thead id="tabela"></thead>
+        <tbody id="resul"></tbody>
+    </table>
 
     <script type="text/javascript">
 
         function limpar() {
             $('#input').val('');
             $('#tabela').empty();
+            $('#resul').empty();
         }
         function calcular() {
             var input = $('#input').val();
             if (input.length == '') {
-                alert('Por favor, forneça expressões como entrada');
+                alert('Por favor, forneça a expressão');
                 return;
             }
 
@@ -48,13 +52,34 @@
             var tokens = new antlr4.CommonTokenStream(lexer);
             var parser = new TrabParser(tokens);
 
+            var errorListener = new HtmlErrorListener();
+            lexer.addErrorListener(errorListener);
+            parser.addErrorListener(errorListener);
+
             parser.buildParseTrees = true;
             var tree = parser.prog();
             var htmlTrab = new HtmlTrabListener();
             antlr4.tree.ParseTreeWalker.DEFAULT.walk(htmlTrab, tree);
 
-            var item = htmlTrab.values[0].value;
-            $('#tabela').append('<li>' + item + '</li>');
+            if (errorListener.errors.length == 0) {
+                var item = htmlTrab.values[0].value;
+                var cont = 0
+                for (let i of item) {
+                    if (i != '.' && i != '+')
+                        $('#tabela').append('<th>' + i + '</th>')
+                    cont++
+                }
+            } else {
+                var msg = 'Entrada Invalida\n\n';
+                for (var i = 0; i < errorListener.errors.length; i++) {
+                    var error = errorListener.errors[i];
+                    msg += 'Linha:  ' + error.line + '\n'
+                        + 'Coluna: ' + error.column + '\n'
+                        + 'Erro:   ' + error.msg + '\n\n';
+                }
+                alert(msg);
+            }
+
 
         }
 
